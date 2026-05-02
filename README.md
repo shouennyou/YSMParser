@@ -4,7 +4,7 @@
   <p>.ysm模型一键解密、转换为Blockbench工程，全版本加密格式支持。</p>
 </div>
 
-https://github.com/user-attachments/assets/e3a3ca69-7d1f-4639-a925-4980ddf03e26
+https://github.com/user-attachments/assets/3485f424-c715-4d65-a35a-d57bd46d82a8
 
 ## 总览
 
