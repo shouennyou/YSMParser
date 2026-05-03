@@ -468,6 +468,7 @@ private:
 
 } // namespace
 
+#include "algorithms/CryptoAlgorithms.hpp"
 int main(int argc, char** argv) {
     PlatformCompat::init_console_utf8();
 

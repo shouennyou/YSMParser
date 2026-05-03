@@ -2623,6 +2623,8 @@ void YSMParserV3::parse()
 	m_decrypted.assign(xorred_data.begin() + 2 + n, xorred_data.end());
 
 	// m_decrypted need to be decompressed by ZSTD.
+
+
 	m_decompressed = CryptoUtils::DecompressZstd(m_decrypted);
 
 
