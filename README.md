@@ -12,6 +12,8 @@
 
 https://github.com/user-attachments/assets/3485f424-c715-4d65-a35a-d57bd46d82a8
 
+[-> 在线体验/Online Demo](https://www.ysm.rip/)
+
 <a id="zh-cn"></a>
 
 ## 简体中文
