@@ -39,6 +39,18 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+template <typename JsonType>
+static void clean_json_floats(JsonType& j) {
+	if (j.is_number_float()) {
+		double val = j.template get<double>();
+		j = std::round(val * 100000.0) / 100000.0;
+	}
+	else if (j.is_object() || j.is_array()) {
+		for (auto& element : j) {
+			clean_json_floats(element);
+		}
+	}
+}
 /**
  * @brief 将 Windows 文件名中的非法字符替换为指定字符
  *
@@ -1055,9 +1067,9 @@ void YSMParserV3::ParseYSMJson(BufferReader& reader)
 
 						// 只有 type 为 range 时，才把 step, min, max 写入 JSON
 						if (type == "range") {
-							formObj["step"] = (int32_t)step;
-							formObj["min"] = (int32_t)_min;
-							formObj["max"] = (int32_t)_max;
+							formObj["step"] = step;
+							formObj["min"] = _min;
+							formObj["max"] = _max;
 						}
 
 						uint32_t labelsSize = reader.readVarint();
@@ -1177,6 +1189,8 @@ void YSMParserV3::ParseYSMJson(BufferReader& reader)
 	root["properties"] = properties;
 
 	root["files"] = buildFilesFromParsedData();
+
+	clean_json_floats(root);
 
 	std::string result;
 	if (this->isFormatJson())
