@@ -1307,7 +1307,22 @@ nlohmann::ordered_json YSMParserV3::buildFilesFromParsedData() {
 			if (name == sn || name.starts_with(sn + "_")) { isSub = true; break; }
 		}
 		if (isSub) continue;
-		playerTex.push_back({ {"uv", "textures/" + sanitizeWindowsFilename(name + ".png")} });
+		json texObj = json::object();
+		texObj["uv"] = "textures/" + sanitizeWindowsFilename(name + ".png");
+
+		std::string expectedNormal = name + "_normal";
+		std::string expectedSpecular = name + "_specular";
+
+		for (const auto& spImg : m_specialImageFiles) {
+			if (spImg.first == expectedNormal) {
+				texObj["normal"] = "textures/" + sanitizeWindowsFilename(expectedNormal + ".png");
+			}
+			else if (spImg.first == expectedSpecular) {
+				texObj["specular"] = "textures/" + sanitizeWindowsFilename(expectedSpecular + ".png");
+			}
+		}
+
+		playerTex.push_back(texObj);
 	}
 	if (!playerTex.empty()) player["texture"] = playerTex;
 
@@ -2085,12 +2100,14 @@ void YSMParserV3::ParseTextureFiles(BufferReader& reader)
 		for (uint32_t i = 0; i < subTextureSize; i++) {
 			uint32_t specular_type = reader.readVarint(); // 1为NORMAL，2为高光
 			auto specialImageData = ParseSpecialImage(reader);
-			m_specialImageFiles.push_back({ name + "_Special", specialImageData });
+			std::string suffix = (specular_type == 1) ? "_normal" : (specular_type == 2 ? "_specular" : "_special");
+			m_specialImageFiles.push_back({ name + suffix, specialImageData });
+
 			uint32_t sp_w = reader.readVarint();
 			uint32_t sp_h = reader.readVarint();
 			uint32_t sp_format = reader.readVarint();
 			uint32_t sp_flag = reader.readVarint();
-			Images::validateImageMetadata(name + "_Special", reader.offset, sp_format, sp_flag);
+			Images::validateImageMetadata(name + suffix, reader.offset, sp_format, sp_flag);
 		}
 
 		m_textureFiles.push_back({ name, fileData });
@@ -2338,7 +2355,8 @@ void YSMParserV3::deserializeLegacyV15(BufferReader& reader) {
 			if (pngBytes.empty()) {
 				throw ParserUnknownField();
 			}
-			m_specialImageFiles.push_back({ std::to_string(specular_type), pngBytes });
+			std::string suffix = (specular_type == 1) ? "_normal" : (specular_type == 2 ? "_specular" : "_special");
+			m_specialImageFiles.push_back({ textureName + suffix, pngBytes });
 		}
 	}
 
@@ -2540,7 +2558,7 @@ void YSMParserV3::deserializeModern(BufferReader& reader) {
 				{
 					m_animControllerFiles.push_back({ categoryName + "/" + subModuleName, subController });
 				}
-				
+
 			}
 			return;
 		}
@@ -2864,4 +2882,3 @@ void YSMParserV3::saveToDirectory(std::string output_directory)
 		saveFile(outPath, item.second);
 	}
 }
-
