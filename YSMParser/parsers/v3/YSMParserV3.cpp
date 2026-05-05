@@ -920,15 +920,18 @@ std::vector<uint8_t> YSMParserV3::ParseModels(BufferReader& reader)
 	final_output["format_version"] = format_version;
 	final_output["minecraft:geometry"] = json::array({ out_geom });
 
-	std::string resultStr = final_output.dump(4, ' ', false);
-	std::vector<uint8_t> data(resultStr.begin(), resultStr.end());
-	// m_modelFiles.push_back({ model.sha256, data });
+	std::string result;
+	if (this->isFormatJson())
+	{
+		result = final_output.dump(4, ' ', false);
+	}
+	else
+	{
+		result = final_output.dump(-1);
+	}
+	std::vector<uint8_t> data(result.begin(), result.end());
 
 	return data;
-
-	//std::cout << "\n[DEBUG] Reconstructed Model JSON:\n"
-	//	<< final_output.dump(2, ' ', false) << "\n\n";
-
 }
 
 
@@ -1175,7 +1178,16 @@ void YSMParserV3::ParseYSMJson(BufferReader& reader)
 
 	root["files"] = buildFilesFromParsedData();
 
-	std::string result = root.dump(4, ' ', false);
+	std::string result;
+	if (this->isFormatJson())
+	{
+		result = root.dump(4, ' ', false);
+	}
+	else
+	{
+		result = root.dump(-1);
+	}
+
 	std::vector<uint8_t> data(result.begin(), result.end());
 	m_ysmJsonFile = data;
 	if (m_format <= 15) return;
@@ -1403,10 +1415,20 @@ void YSMParserV3::ParseLegacyYSMInfo(BufferReader& reader)
 	j["extra_animation_names"] = jinfo_extra_animation_names;
 	j["free"] = info_free;
 
-	std::string infoJson = j.dump(4, ' ', false);
-	m_infoJsonFile.assign(infoJson.begin(), infoJson.end());
 
-	std::cout << "[DEBUG - info.json]\n" << infoJson << std::endl;
+	std::string result;
+	if (this->isFormatJson())
+	{
+		result = j.dump(4, ' ', false);
+	}
+	else
+	{
+		result = j.dump(-1);
+	}
+
+	m_infoJsonFile.assign(result.begin(), result.end());
+
+	std::cout << "[DEBUG - info.json]\n" << result << std::endl;
 }
 
 std::vector<uint8_t> YSMParserV3::ParseAnimations(BufferReader& reader)
@@ -1491,10 +1513,6 @@ std::vector<uint8_t> YSMParserV3::ParseAnimations(BufferReader& reader)
 	std::string hash;
 	if (m_format > 15) {
 		hash = reader.readString();
-		if (hash[0] == '\x01')
-		{
-			std::cout << 1;
-		}
 	}
 	uint32_t animCount = reader.readVarint();
 	for (uint32_t anim = 0; anim < animCount; ++anim) {
@@ -1519,23 +1537,12 @@ std::vector<uint8_t> YSMParserV3::ParseAnimations(BufferReader& reader)
 		}
 
 		if (m_format > 9) {
-			// 这里还有4个 00，可能是未知的类型标识，暂时跳过
-			// printf("run 1\n");
-			if (reader.seeByte() != 0)
-			{
-				std::cout << 1;
+			if(reader.readVarint() != 0){
+				throw ParserUnknownField();
 			}
-			std::string unkField1 = reader.readString();
-			if (!unkField1.empty())
-			{
-				//reader.offset += 7;
-			}
-			// 这里还有4个 00，可能是未知的类型标识，暂时跳过
-			// printf("run 2\n");
-			std::string unkField2 = reader.readString();
-			if (!unkField2.empty())
-			{
-				reader.offset += 7;
+
+			if (reader.readVarint() != 0) {
+				throw ParserUnknownField();
 			}
 
 
@@ -1741,8 +1748,17 @@ std::vector<uint8_t> YSMParserV3::ParseAnimations(BufferReader& reader)
 		root["animations"] = animationsDesc;
 	}
 
-	std::string debugJson = root.dump(-1);
-	std::vector<uint8_t> animData(debugJson.begin(), debugJson.end());
+	std::string result;
+	if (this->isFormatJson())
+	{
+		result = root.dump(4, ' ', false);
+	}
+	else
+	{
+		result = root.dump(-1);
+	}
+
+	std::vector<uint8_t> animData(result.begin(), result.end());
 	return animData;
 }
 
@@ -1799,7 +1815,15 @@ void YSMParserV3::ParseLanguageFiles(BufferReader& reader)
 			// 将节点存入 nodes 对象
 			nodesData[nodeName] = nodeValue;
 		}
-		std::string result = nodesData.dump(4, ' ', false);
+		std::string result;
+		if (this->isFormatJson())
+		{
+			result = nodesData.dump(4, ' ', false);
+		}
+		else
+		{
+			result = nodesData.dump(-1);
+		}
 		std::vector<uint8_t> data(result.begin(), result.end());
 		m_languageFiles.push_back({ name ,data });
 	}
@@ -2025,7 +2049,15 @@ std::vector<uint8_t> YSMParserV3::ParseAnimationControllers(BufferReader& reader
 
 	root["animation_controllers"] = controllers;
 
-	std::string result = root.dump(4, ' ', false);
+	std::string result;
+	if (this->isFormatJson())
+	{
+		result = root.dump(4, ' ', false);
+	}
+	else
+	{
+		result = root.dump(-1);
+	}
 	std::vector<uint8_t> data(result.begin(), result.end());
 
 	return data;
