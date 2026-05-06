@@ -453,7 +453,7 @@ static float clean_val(float v) {
 	return std::round(v * 10000.0f) / 10000.0f;
 }
 
-static BlockbenchCube restore_blockbench_cube(const std::vector<Face>& faces_data, float original_inflate = 0.0f, int texture_size = 512) {
+static BlockbenchCube restore_blockbench_cube(const std::vector<Face>& faces_data, float original_inflate = 0.0f, int texture_width = 512, int texture_height = 512) {
 	std::set<Vector3D> unique_pts;
 
 	std::vector<Vector3D> candidate_axes;
@@ -672,8 +672,8 @@ static BlockbenchCube restore_blockbench_cube(const std::vector<Face>& faces_dat
 
 		float u_min = 1e9, v_min = 1e9, u_max = -1e9, v_max = -1e9;
 		for (int i = 0; i < 4; i++) {
-			float u = info.raw_f->vertices[i].u * texture_size;
-			float v = info.raw_f->vertices[i].v * texture_size;
+			float u = info.raw_f->vertices[i].u * texture_width;
+			float v = info.raw_f->vertices[i].v * texture_height;
 			u_min = std::min(u_min, u); u_max = std::max(u_max, u);
 			v_min = std::min(v_min, v); v_max = std::max(v_max, v);
 		}
@@ -895,7 +895,7 @@ std::vector<uint8_t> YSMParserV3::ParseModels(BufferReader& reader)
 		json cubes_arr = json::array();
 		for (const auto& parsedCube : parsedBone.cubes) {
 			try {
-				BlockbenchCube bbCube = restore_blockbench_cube(parsedCube.faces, 0.0f, static_cast<int>(model.description.texture_width));
+				BlockbenchCube bbCube = restore_blockbench_cube(parsedCube.faces, 0.0f, static_cast<int>(model.description.texture_width), static_cast<int>(model.description.texture_height));
 				json c_json = json::object();
 				c_json["origin"] = clean_vector(bbCube.origin);
 				c_json["size"] = clean_vector(bbCube.size);
@@ -2896,4 +2896,3 @@ void YSMParserV3::saveToDirectory(std::string output_directory)
 		saveFile(outPath, item.second);
 	}
 }
-
